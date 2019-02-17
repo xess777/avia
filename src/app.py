@@ -12,12 +12,27 @@ class ProposalsResource:
         self.storage = storage
 
     def on_get(self, req, resp):
+        allowed_order_keys = (
+            'adult_prize',
+            'child_prize',
+            'infant_prize',
+            'duration',
+        )
         # Параметры.
         limit = req.get_param_as_int('limit', min=0)
+        reverse = req.get_param_as_bool('reverse') or False
+        order_by_key = req.get_param('order_by')
+        if order_by_key not in allowed_order_keys:
+            order_by_key = None
 
-        proposals = self.storage.get_proposals()
+        data = self.storage.get_proposals()
+        if order_by_key:
+            proposals = data.order_by(key=order_by_key, reverse=reverse)
+        else:
+            proposals = data.proposals
+
         proposals_schema = ProposalSchema(strict=True, many=True)
-        result = proposals_schema.dump(proposals.proposals[:limit])
+        result = proposals_schema.dump(proposals[:limit])
 
         resp.status = falcon.HTTP_200
         resp.body = jsonify({'proposals': result.data})

@@ -1,10 +1,11 @@
 from dataclasses import dataclass
 from datetime import datetime
+from decimal import Decimal
 from enum import Enum
-from typing import List, TYPE_CHECKING
+from operator import attrgetter
+from typing import List, Union
 
-if TYPE_CHECKING:
-    from decimal import Decimal
+from cached_property import cached_property
 
 
 class PricingTypeEnum(Enum):
@@ -22,6 +23,10 @@ class Proposals:
     """Класс для хранения предложений по перелетам."""
     proposals: List['Proposal']
 
+    def order_by(self, key, reverse=False):
+        """Возвращает отсортированный по ключу список предложений."""
+        return sorted(self.proposals, key=attrgetter(key), reverse=reverse)
+
 
 @dataclass(frozen=True)
 class Proposal:
@@ -29,6 +34,60 @@ class Proposal:
     uuid: str
     flights: 'Flights'
     pricing: List['Pricing']
+
+    @cached_property
+    def adult_prize(self):
+        """Итоговая стоимость для одного взрослого."""
+        pricing = self._get_pricing_by_type(PricingTypeEnum.SINGLE_ADULT)
+        result = pricing.total_amount if pricing else Decimal()
+
+        return result
+
+    @cached_property
+    def child_prize(self):
+        """Итоговая стоимость для одного ребенка."""
+        pricing = self._get_pricing_by_type(PricingTypeEnum.SINGLE_CHILD)
+        # Если такого типа нет, возвращаем стоимость как за взрослого.
+        result = pricing.total_amount if pricing else self.adult_prize
+
+        return result
+
+    @cached_property
+    def infant_prize(self):
+        """Итоговая стоимость для одного младенца."""
+        pricing = self._get_pricing_by_type(PricingTypeEnum.SINGLE_INFANT)
+        # Если такого типа нет, возвращаем стоимость как за взрослого.
+        result = pricing.total_amount if pricing else self.adult_prize
+
+        return result
+
+    @cached_property
+    def duration(self):
+        """Продолжительность полета в минутах."""
+        result = None
+        flights = self.flights.onward
+        if flights:
+            # Время вылета из начального пункта.
+            departure_ts = flights[0].departure_timestamp
+            # Время прилета в конечный пункт.
+            arrival_ts = flights[-1].arrival_timestamp
+            # Разница в минутах.
+            result = (arrival_ts - departure_ts).total_seconds() // 60
+
+        return result
+
+    def _get_pricing_by_type(self, type_) -> Union['Pricing', None]:
+        """Возвращает экземпляр Pricing по типу из списка ценообразований.
+
+        Может вернуть None, если нужный тип не найден.
+        """
+        result = None
+        for item in self.pricing:
+            if item.type == type_:
+                result = item
+                break
+
+        return result
 
 
 @dataclass(frozen=True)

@@ -10,6 +10,7 @@ ipdb = "*"
 falcon = "*"
 gunicorn = "*"
 marshmallow = "*"
+cached-property = "*"
 
 [requires]
 python_version = "3.7"
