@@ -1,4 +1,6 @@
+import json
 from datetime import datetime
+from decimal import Decimal
 from enum import Enum
 from typing import Union
 
@@ -30,3 +32,17 @@ def str2int(int_string: str) -> Union[int, None]:
         result = None
 
     return result
+
+
+class ExtendedJSONEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, Decimal):
+            result = float(o)
+        else:
+            result = super().default(o)
+
+        return result
+
+
+def jsonify(data):
+    return json.dumps(data, cls=ExtendedJSONEncoder, indent=2, sort_keys=True)

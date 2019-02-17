@@ -39,6 +39,10 @@ class Pricing:
     taxes: 'Decimal' = 0
     total_amount: 'Decimal' = 0
 
+    @property
+    def type_name(self) -> str:
+        return self.type.name.lower()
+
 
 @dataclass(frozen=True)
 class Carrier:
@@ -74,3 +78,19 @@ class Flight:
     fare_basis: str
     warning_text: str
     ticket_type: str
+
+    @property
+    def carrier_id(self) -> str:
+        return self.carrier.carrier_id if self.carrier else ''
+
+    @property
+    def carrier_name(self) -> str:
+        return self.carrier.carrier_name if self.carrier else ''
+
+    @property
+    def source_code(self) -> str:
+        return self.source.code if self.source else ''
+
+    @property
+    def destination_code(self) -> str:
+        return self.destination.code if self.destination else ''
