@@ -23,9 +23,19 @@ class Proposals:
     """Класс для хранения предложений по перелетам."""
     proposals: List['Proposal']
 
+    @cached_property
+    def min_prize(self):
+        """Минимальная цена для взрослого из всех предложений."""
+        return min(map(attrgetter('adult_prize'), self.proposals))
+
+    @cached_property
+    def min_duration(self):
+        """Минимальная длительность перелета из всех предложений."""
+        return min(map(attrgetter('duration'), self.proposals))
+
     def order_by(self, key, reverse=False):
         """Возвращает отсортированный по ключу список предложений."""
-        return sorted(self.proposals, key=attrgetter(key), reverse=reverse)
+        return sorted(self.proposals, key=key, reverse=reverse)
 
 
 @dataclass(frozen=True)
@@ -72,7 +82,37 @@ class Proposal:
             # Время прилета в конечный пункт.
             arrival_ts = flights[-1].arrival_timestamp
             # Разница в минутах.
-            result = (arrival_ts - departure_ts).total_seconds() // 60
+            result = int((arrival_ts - departure_ts).total_seconds()) // 60
+
+        return result
+
+    def calc_optimality(self, min_prize: 'Decimal', min_duration: int) -> float:
+        """Рассчитывает оптимальность перелета.
+        Чем больше значение, тем оно оптимальнее.
+
+        Формула:
+            opt = (k1 * min_prize / prize) + (k2 * min_duration / duration)
+        где
+            opt - оптимальность
+            k1 - коэффициент влияния цены на оптимальность
+            min_prize - минимальная цена перелета
+            prize - цена перелета
+            k2 - коэффициент влияния длительности перелета на оптимальность
+            min_duration - минимальная длительность перелета
+            duration - длительность перелета
+
+        Коэффициенты k1 и k2 подобраны субъективно, будем считать,
+        что для 75% пассажиров важна цена, для 25% время перелета.
+
+        Также, чтобы не усложнять логику, стоимость билета берем для взрослого.
+        Остальные факторы пока не учитываем.
+        """
+        k1 = 0.75
+        k2 = 0.25
+        result = (
+                (k1 * float(min_prize / self.adult_prize)) +
+                (k2 * min_duration / self.duration)
+        )
 
         return result
 
