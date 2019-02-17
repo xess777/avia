@@ -33,9 +33,13 @@ class Storage:
                      self._proposals[VIA_OW_KEY].proposals)
         self._proposals['all'] = Proposals(proposals=proposals)
 
-    def get_proposals(self) -> 'Proposals':
+    def get_all_proposals(self) -> 'Proposals':
         """Возвращает все предложения о перелетах."""
         return self._proposals['all']
+
+    def get_proposals(self) -> 'Proposals':
+        """Возвращает все предложения о перелетах."""
+        return self._proposals
 
     def _create_proposals(self, data: dict) -> 'Proposals':
         """Создает экземпляр Proposals на основе данных из словаря."""

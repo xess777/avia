@@ -24,16 +24,16 @@ class Proposals:
     proposals: List['Proposal']
 
     @cached_property
-    def min_prize(self):
+    def min_prize(self) -> 'Decimal':
         """Минимальная цена для взрослого из всех предложений."""
         return min(map(attrgetter('adult_prize'), self.proposals))
 
     @cached_property
-    def min_duration(self):
+    def min_duration(self) -> int:
         """Минимальная длительность перелета из всех предложений."""
         return min(map(attrgetter('duration'), self.proposals))
 
-    def order_by(self, key, reverse=False):
+    def order_by(self, key, reverse=False) -> List['Proposal']:
         """Возвращает отсортированный по ключу список предложений."""
         return sorted(self.proposals, key=key, reverse=reverse)
 
@@ -46,7 +46,7 @@ class Proposal:
     pricing: List['Pricing']
 
     @cached_property
-    def adult_prize(self):
+    def adult_prize(self) -> 'Decimal':
         """Итоговая стоимость для одного взрослого."""
         pricing = self._get_pricing_by_type(PricingTypeEnum.SINGLE_ADULT)
         result = pricing.total_amount if pricing else Decimal()
@@ -54,7 +54,7 @@ class Proposal:
         return result
 
     @cached_property
-    def child_prize(self):
+    def child_prize(self) -> 'Decimal':
         """Итоговая стоимость для одного ребенка."""
         pricing = self._get_pricing_by_type(PricingTypeEnum.SINGLE_CHILD)
         # Если такого типа нет, возвращаем стоимость как за взрослого.
@@ -63,7 +63,7 @@ class Proposal:
         return result
 
     @cached_property
-    def infant_prize(self):
+    def infant_prize(self) -> 'Decimal':
         """Итоговая стоимость для одного младенца."""
         pricing = self._get_pricing_by_type(PricingTypeEnum.SINGLE_INFANT)
         # Если такого типа нет, возвращаем стоимость как за взрослого.
@@ -72,7 +72,7 @@ class Proposal:
         return result
 
     @cached_property
-    def duration(self):
+    def duration(self) -> int:
         """Продолжительность полета в минутах."""
         result = None
         flights = self.flights.onward
@@ -83,6 +83,17 @@ class Proposal:
             arrival_ts = flights[-1].arrival_timestamp
             # Разница в минутах.
             result = int((arrival_ts - departure_ts).total_seconds()) // 60
+
+        return result
+
+    @cached_property
+    def segments_airports(self) -> List[str]:
+        """Маршрут из аэропортов"""
+        result = []
+        flights = self.flights.onward
+        if flights:
+            result.extend(map(attrgetter('source.code'), flights))
+            result.append(flights[-1].destination.code)
 
         return result
 

@@ -3,6 +3,7 @@ from wsgiref import simple_server
 
 import falcon
 
+from config import VIA_3_KEY, VIA_OW_KEY
 from schemas import ProposalSchema
 from storage import Storage
 from utils import jsonify
@@ -27,7 +28,7 @@ class ProposalsResource:
         if order_by_key not in allowed_order_keys:
             order_by_key = None
 
-        data = self.storage.get_proposals()
+        data = self.storage.get_all_proposals()
         proposals = data.proposals
         if order_by_key:
             if order_by_key == 'optimality':
@@ -49,13 +50,53 @@ class ProposalsResource:
         resp.body = jsonify({'proposals': result.data})
 
 
+class DifferenceResource:
+    def __init__(self, storage):
+        self.storage = storage
+
+    def on_get(self, req, resp):
+        allowed_order_keys = (
+            'adult_prize',
+            'child_prize',
+            'infant_prize',
+            'duration',
+        )
+        # Параметры.
+        reverse = req.get_param_as_bool('reverse') or False
+        order_by_key = req.get_param('order_by', required=True)
+        if order_by_key not in allowed_order_keys:
+            resp.status = falcon.HTTP_400
+            return
+
+        data = self.storage.get_proposals()
+        key = attrgetter(order_by_key)
+        # Лучшее предложение из первого запроса
+        via3 = data[VIA_3_KEY].order_by(key=key, reverse=reverse)[0]
+        # Лучшее предложение из второго запроса
+        via_ow = data[VIA_OW_KEY].order_by(key=key, reverse=reverse)[0]
+        # Сравнение предложений
+        result = {
+            'adult_prize_diff': via_ow.adult_prize - via3.adult_prize,
+            'child_prize_diff': via_ow.child_prize - via3.child_prize,
+            'infant_prize_diff': via_ow.infant_prize - via3.infant_prize,
+            'duration_diff': via_ow.duration - via3.duration,
+            'via3_segments_airports': via3.segments_airports,
+            'via_ow_segments_airports': via_ow.segments_airports,
+        }
+
+        resp.status = falcon.HTTP_200
+        resp.body = jsonify(result)
+
+
 api = falcon.API()
 # Инициализируем хранилище.
 storage = Storage()
 storage.load()
 # Роутинг.
 proposals_resource = ProposalsResource(storage)
+difference_resource = DifferenceResource(storage)
 api.add_route('/proposals', proposals_resource)
+api.add_route('/difference', difference_resource)
 
 
 if __name__ == '__main__':
