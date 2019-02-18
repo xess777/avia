@@ -68,3 +68,10 @@ GET-параметры:
     * ('false', 'False', 'no', '0', 'off') - false
 
 Пример запроса: `http://localhost/difference?order_by=adult_prize&reverse=true`
+
+
+## Тесты
+Запуск тестов
+```console
+python tests.py
+```
