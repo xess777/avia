@@ -204,3 +204,19 @@ class Flight:
     @property
     def destination_code(self) -> str:
         return self.destination.code if self.destination else ''
+
+
+def compare_proposals(first_p, second_p: 'Proposal') -> dict:
+    """Сравнивает два предложения между собой.
+    Возвращает словарь с отличиями.
+    """
+    result = {
+        'adult_prize_diff': second_p.adult_prize - first_p.adult_prize,
+        'child_prize_diff': second_p.child_prize - first_p.child_prize,
+        'infant_prize_diff': second_p.infant_prize - first_p.infant_prize,
+        'duration_diff': second_p.duration - first_p.duration,
+        'first_segments_airports': first_p.segments_airports,
+        'second_segments_airports': second_p.segments_airports,
+    }
+
+    return result

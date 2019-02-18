@@ -1,3 +1,5 @@
+import logging
+import sys
 import uuid
 from itertools import groupby
 from operator import itemgetter
@@ -14,6 +16,7 @@ from parser import Parser
 class Storage:
     """Хранилище."""
     def __init__(self):
+        self.logger = logging.getLogger()
         self._proposals = {}
         self._airports = {}
         self._carriers = {}
@@ -21,12 +24,10 @@ class Storage:
     def load(self) -> None:
         """Загружает данные из xml файлов в хранилище."""
         # Парсим файл RS_Via-3.xml
-        content = Path(RS_VIA_3_XML).read_text()
-        data = Parser.parse(content)
+        data = self._parse_xml_file(RS_VIA_3_XML)
         self._proposals[VIA_3_KEY] = self._create_proposals(data)
         # Парсим файл RS_ViaOW.xml
-        content = Path(RS_VIA_OW_XML).read_text()
-        data = Parser.parse(content)
+        data = self._parse_xml_file(RS_VIA_OW_XML)
         self._proposals[VIA_OW_KEY] = self._create_proposals(data)
         # Объединяем результаты парсинга.
         proposals = (self._proposals[VIA_3_KEY].proposals +
@@ -40,6 +41,16 @@ class Storage:
     def get_proposals(self) -> 'Proposals':
         """Возвращает все предложения о перелетах."""
         return self._proposals
+
+    def _parse_xml_file(self, file_path: str) -> dict:
+        """Парсит xml и возвращает словарь с данными."""
+        try:
+            content = Path(file_path).read_text()
+        except FileNotFoundError:
+            self.logger.error(f'Файл {file_path} не найден.')
+            sys.exit()
+
+        return Parser.parse(content)
 
     def _create_proposals(self, data: dict) -> 'Proposals':
         """Создает экземпляр Proposals на основе данных из словаря."""

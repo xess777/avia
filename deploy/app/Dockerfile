@@ -11,4 +11,4 @@ WORKDIR /usr/src/app/
 RUN pipenv install --skip-lock --system --dev
 WORKDIR /usr/src/app/src
 
-ENTRYPOINT ["gunicorn", "app:api", "--bind", "0.0.0.0:80", "--preload"]
+ENTRYPOINT ["gunicorn", "app:get_app()", "--bind", "0.0.0.0:80", "--preload"]
