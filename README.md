@@ -52,8 +52,8 @@ GET-параметры:
     "child_prize_diff": "разница в цене для одного ребенка",
     "infant_prize_diff": "разница в цене для одного младенца",
     "duration_diff": "разница в длительности маршрута",
-    "via3_segments_airports": "маршрут из RS_Via-3.xml",
-    "via_ow_segments_airports": "маршрут из RS_ViaOW.xml",
+    "first_segments_airports": "маршрут из RS_Via-3.xml",
+    "second_segments_airports": "маршрут из RS_ViaOW.xml",
 }
 ```
 
